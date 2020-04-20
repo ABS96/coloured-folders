@@ -40,8 +40,11 @@ if (A_GuiEvent = "DoubleClick")
   iniFile := A_Args[1] . "\desktop.ini"
 
   iconIndex := A_EventInfo - 1
-  icon = %A_WorkingDir%\icons.dll,%iconIndex%
-  IniWrite, %icon%, %iniFile%, .ShellClassInfo, IconResource
+  IconResource = %A_WorkingDir%\icons.dll,%iconIndex%
+  ; IconFile = %A_WorkingDir%\icons.dll
+  IniWrite, %IconResource%, %iniFile%, .ShellClassInfo, IconResource
+  ; IniWrite, %IconFile%, %iniFile%, .ShellClassInfo, IconFile
+  ; IniWrite, %iconIndex%, %iniFile%, .ShellClassInfo, iconIndex
   ExitApp
 }
 return
