@@ -23,6 +23,8 @@ Compiling:
 
 ## Notes
 
+It takes a little time for the system to notice that the icon has changed.
+
 The uninstaller script is not entirely functional yet.  
 To remove the program, run the uninstaller, then remove the following folders manually:
 
