@@ -35,6 +35,6 @@ Install() {
 if (A_OSVersion < 10)
   MsgBox,, Coloured folders - Installer, This program can only be installed on Windows 10 or higher.
 
-MsgBox 4, Coloured folders - Installer, Would you like to install the coloured folders shell extension (v1)?
+MsgBox 4, Coloured folders - Installer, Would you like to install the coloured folders shell extension (v2)?
 IfMsgBox Yes
   Install()
