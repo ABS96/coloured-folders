@@ -37,14 +37,19 @@ Gui, Show
 pickerLV:
 if (A_GuiEvent = "DoubleClick")
 {
-  iniFile := A_Args[1] . "\desktop.ini"
+  iniFolder := A_Args[1]
+  iniFile := iniFolder . "\desktop.ini"
 
   iconIndex := A_EventInfo - 1
   IconResource = %A_WorkingDir%\icons.dll,%iconIndex%
   ; IconFile = %A_WorkingDir%\icons.dll
+
+  FileSetAttrib, -HS, %iniFile% ; make ini file writable
   IniWrite, %IconResource%, %iniFile%, .ShellClassInfo, IconResource
   ; IniWrite, %IconFile%, %iniFile%, .ShellClassInfo, IconFile
-  ; IniWrite, %iconIndex%, %iniFile%, .ShellClassInfo, iconIndex
+  ; IniWrite, %iconIndex%, %iniFile%, .ShellClassInfo, iconIndex%
+  FileSetAttrib, +HS, %iniFile%
+  FileSetAttrib, +S, %iniFolder%
   ExitApp
 }
 return
