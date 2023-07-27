@@ -1,58 +1,41 @@
-#Persistent
+#Requires AutoHotkey v2.0
 #NoTrayIcon
-#NoEnv
 
-If (!A_Args[1]) {
-  MsgBox 16, Error, No folder was specified
+If (A_Args.Length < 1) {
+  MsgBox("No folder was specified", "Error", "OK Iconx")
   ExitApp
 }
 
-EnvGet, localAppData, localappdata
-SetWorkingDir %localAppData%\ABS\ColouredFolders
-; Menu, Tray, Icon, icons.dll, 3
+ICON_LIBRARY := A_ScriptDir . "\icons.icl"
+COLOURS := StrSplit(FileRead(A_ScriptDir . "\colours.txt"), "`n")
 
-FileReadLine, colour, colours.ini, 1
+handleDoubleClick(control, index) {
+  target_folder := A_Args[1]
+  desktop_ini := target_folder . "\desktop.ini"
+  temp_file := target_folder . "\desktop.ini.tmp"
+  icon_index := index - 1
+  icon_resource := ICON_LIBRARY . "," . icon_index
 
-Gui, New, -MinimizeBox, Pick folder colour
-
-Gui, Add, ListView, W130 H350 gpickerLV vpickerLV, Icon
-; height := LV_GetCount() * 17 + 10
-GuiControl, +IconSmall, pickerLV
-iconList := IL_Create(,,0)
-LV_SetImageList(iconList)
-
-colours := ["dark grey", "grey", "white", "red", "brown", "orange", "yellow", "lime", "olive", "green", "mint", "teal", "light blue", "blue", "navy", "space", "race blue", "purple", "pink", "maroon"]
-Loop
-{
-  If (A_Index > colours.Length())
-    Break
-  IL_Add(iconList, "icons.dll", A_Index)
-  LV_Add("Icon" . A_index, colours[A_Index])
-}
-GuiControl, H%height%, pickerLV
-
-LV_ModifyCol(1, 30)
-Gui, Show
-
-pickerLV:
-if (A_GuiEvent = "DoubleClick")
-{
-  iniFolder := A_Args[1]
-  iniFile := iniFolder . "\desktop.ini"
-
-  iconIndex := A_EventInfo - 1
-  IconResource = %A_WorkingDir%\icons.dll,%iconIndex%
-  ; IconFile = %A_WorkingDir%\icons.dll
-
-  FileSetAttrib, -HS, %iniFile% ; make ini file writable
-  IniWrite, %IconResource%, %iniFile%, .ShellClassInfo, IconResource
-  ; IniWrite, %IconFile%, %iniFile%, .ShellClassInfo, IconFile
-  ; IniWrite, %iconIndex%, %iniFile%, .ShellClassInfo, iconIndex%
-  FileSetAttrib, +HS, %iniFile%
-  FileSetAttrib, +S, %iniFolder%
+  if (FileExist(desktop_ini)) {
+    FileSetAttrib("-HS", desktop_ini)
+    FileMove desktop_ini, temp_file
+  }
+  IniWrite icon_resource, temp_file, ".ShellClassInfo", "IconResource"
+  FileMove temp_file, desktop_ini ; Necessary for the system to pick up the change
+  FileSetAttrib("+HS", desktop_ini)
+  FileSetAttrib("+S", target_folder)
   ExitApp
 }
-return
 
-GuiClose:
-ExitApp
+TraySetIcon ICON_LIBRARY, 3
+picker := Gui("-MinimizeBox", "Pick a colour")
+icon_list_view := picker.Add("ListView", "W130 H350")
+icon_list_view.Opt("+IconSmall")
+icon_list_view.OnEvent("DoubleClick", handleDoubleClick)
+image_list := IL_Create()
+icon_list_view.SetImageList(image_list)
+for colour in COLOURS {
+  IL_Add(image_list, ICON_LIBRARY, A_Index)
+  icon_list_view.Add("Icon" . A_Index, colour)
+}
+picker.Show()

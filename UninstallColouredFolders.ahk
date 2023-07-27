@@ -1,28 +1,56 @@
-#NoEnv
+#Requires AutoHotkey v2.0
 #NoTrayIcon
 
+title := "Coloured Folders - Uninstaller"
+
+Prepare() {
+  response := MsgBox("Would you like to uninstall the Coloured Folders Shell Extension?", title, "YesNo Icon? Default2")
+  if (response == "Yes") {
+    FileCopy "UninstallColouredFolders.exe", A_Temp, 1
+    Run "*RunAs " . A_Temp . "\UninstallColouredFolders.exe"
+  }
+}
+
 Uninstall() {
-  FileCopy UninstallColouredFolders.exe, %A_Temp%, 1
-  Run *RunAs "%A_Temp%\UninstallColouredFolders.exe"
+  install_directory := EnvGet("LocalAppData") . "\ABS\ColouredFolders"
+
+  progress := Gui("-MinimizeBox", title)
+  progress.Add("Progress", "w200 h20 c900000 vBar", 20)
+  progress.Show()
+
+  if (!DirExist(install_directory)) {
+    MsgBox(
+      "Uninstallation failed`nCould not find install directory.",
+      title,
+      "OK Iconx"
+    )
+    ExitApp
+  } else {
+    SetWorkingDir install_directory
+    DirDelete install_directory, 1
+    progress["Bar"].Value += 20
+    DirDelete A_Programs . "\Coloured folders", 1
+    progress["Bar"].Value += 20
+  }
+
+  registry_directory_root := "HKEY_CURRENT_USER\SOFTWARE\Classes\Directory"
+  registry_main_key := "\shell\ColouredFolders"
+
+  for path in ["", "\Background"] {
+    for key in ["\command", ""] {
+      reg_path := registry_directory_root . path . registry_main_key . key
+      RegDeleteKey reg_path
+      progress["Bar"].Value += 10
+    }
+  }
+
+  progress.Hide()
+  MsgBox("Uninstallation complete.", title, "OK Iconi")
+  ExitApp
 }
 
 If (A_ScriptDir == A_Temp) {
-  programDir = `%localappdata`%\ABS\ColouredFolders
-  EnvGet, workingDir, localappdata
-  workingDir .= "\ABS\ColouredFolders"
-  SetWorkingDir %workingDir%
-
-  ; FileDelete, %workingDir%\*.*
-  FileRemoveDir, "%workingDir%", 1
-  ; FileDelete, %A_Programs%\Coloured folders\*.*
-  FileRemoveDir, "%A_Programs%\Coloured folders", 1
-
-  RegDelete HKEY_CURRENT_USER\Software\Classes\Directory\shell\ColouredFolders
-  RegDelete HKEY_CURRENT_USER\Software\Classes\Directory\Background\shell\ColouredFolders
-
-  MsgBox,, Coloured folders - Uninstaller, Uninstall complete.
+  Uninstall()
 } Else {
-  MsgBox 4, Coloured folders - Uninstaller, Would you like to uninstall the Coloured Folders shell extension?
-  IfMsgBox Yes
-    Uninstall()
+  Prepare()
 }
